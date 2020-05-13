@@ -24,14 +24,23 @@ class TicTacToeBoard:
         # Our board always has length == width
         self.board_width, self.board_length = board.shape
 
-    def put_0(self, x: int, y: int):
+    def put_1(self, x: int, y: int):
         """
-        Put the 0 chess piece at the given position of the board
+        Put the 1 chess piece at the given position of the board
         :param x: Horizontal index
         :param y: Vertical index
         :return:
         """
-        self.board[x, y] = 0
+        self.board[x, y] = 1
+
+    def put_neg_1(self, x: int, y: int):
+        """
+        Put chess piece -1 at the given position of the board
+        :param x: Horizontal index
+        :param y: Vertical index
+        :return:
+        """
+        self.board[x, y] = -1
 
     def check_status(self, x: int, y: int, piece: int) -> int:
         """
@@ -57,10 +66,16 @@ class TicTacToeBoard:
                 return piece
 
         # Game is not over
-        return -1
+        return 0
+
+    def copy(self):
+        """
+        Copy the board
+        :return:  A new instance of the board
+        """
+        data = self.board.copy()
+        return type(self)(data)
 
     def __str__(self):
         string_representation = utils.get_string_grid(self.board_width, self.board_length, self.board)
         return string_representation
-
-    
