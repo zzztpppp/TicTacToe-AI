@@ -6,7 +6,7 @@ and the subclass for AI-player, human-player.
 from typing import Union
 
 from abc import ABC, abstractmethod
-from tic_tac_toe import TicTacToeBoard
+
 
 
 class Player(ABC):
@@ -37,7 +37,7 @@ class Player(ABC):
         self._name = name
 
     @abstractmethod
-    def peek(self, board: TicTacToeBoard, piece_type: int):
+    def peek(self, board, piece_type: int):
         """
         Peek the game board, pre-process necessary information
         for play.
@@ -63,7 +63,7 @@ class AIPlayer(Player):
         super().__init__()
         pass
 
-    def peek(self, board: TicTacToeBoard, piece_type: int):
+    def peek(self, board, piece_type: int):
         pass
 
     def play(self) -> int:
@@ -76,7 +76,7 @@ class HumanPlayer(Player):
         super().__init__()
         pass
 
-    def peek(self, board: TicTacToeBoard, piece_type: int):
+    def peek(self, board, piece_type: int):
         """
         For human players to peek the game board, just simply print the
         board onto console

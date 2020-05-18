@@ -1,14 +1,15 @@
 import pytest
 import numpy as np
-from tic_tac_toe import TicTacToeBoard
+import utils
 
 
 class TestGameBoard:
+    import tic_tac_toe
     data = np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
-    board = TicTacToeBoard(data)
+    board = tic_tac_toe.TicTacToeBoard(data)
 
     data2 = np.array([[1, 1, 1], [0, 1, 0], [-1, -1, -1]])
-    board2 = TicTacToeBoard(data2)
+    board2 = tic_tac_toe.TicTacToeBoard(data2)
 
     def test_put(self):
         self.board.put_circle(0, 1)
@@ -31,3 +32,10 @@ class TestGameBoard:
         assert self.board2.check_status(2, 2, -1) == -1
         assert self.board2.check_status(1, 1, 1) == 0
 
+
+class TestUtil:
+
+    def test_index2coordinate(self):
+        assert utils.index2coordinate(8, 3) == (2, 2)
+        assert utils.index2coordinate(0, 3) == (0, 0)
+        assert utils.index2coordinate(3, 3) == (1, 0)
