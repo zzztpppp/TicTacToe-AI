@@ -62,3 +62,7 @@ def index2coordinate(index: int, size: int) -> Tuple[int, int]:
     column = index % size
 
     return row, column
+
+
+def alternate(first, second):
+    return first, lambda: alternate(second, first)

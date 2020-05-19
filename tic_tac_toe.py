@@ -4,6 +4,8 @@ The game of TicTacToe
 
 import numpy as np
 import utils
+import typing
+import players
 
 CIRCLE = 1
 CROSS = -1
@@ -27,7 +29,7 @@ class TicTacToeBoard:
         self.board_width, self.board_length = board.shape
 
     @property
-    def board_size(self):
+    def size(self):
         return self.board_width
 
     def put_circle(self, x: int, y: int):
@@ -74,7 +76,6 @@ class TicTacToeBoard:
         # Game is not over
         return 0
 
-
     def copy(self):
         """
         Copy the board
@@ -98,22 +99,22 @@ class TicTacToeGame:
     The tic tac toe game class, determining who is the next
     player and the status of a game
     """
-    def __init__(self, game_board: TicTacToeBoard, first_player=1):
+    def __init__(self, game_board: TicTacToeBoard, first_player=CROSS):
         self.game_board = game_board
-        self.current_to_play = first_player
+        self.current_piece = first_player  # The piece to put for this move
 
         self.num_steps_played = 0
 
         self.game_running = False
 
-    def next_player(self):
-        if self.current_to_play == CROSS:
-            return CIRCLE
-
-        return CROSS
+    def switch_player(self):
+        if self.current_piece == CROSS:
+            self.current_piece = CIRCLE
+        else:
+            self.current_piece = CROSS
 
     def check_tied(self):
-        board_size = self.game_board.board_size
+        board_size = self.game_board.size
         if board_size ** 2 == self.num_steps_played:
             return True
 
@@ -130,14 +131,65 @@ class TicTacToeGame:
         if self.game_board.board_values[x, y] != 0:
             raise ValueError("You must select a empty slot!")
 
-        self.game_board.board_values[x, y] = self.current_to_play
+        self.game_board.board_values[x, y] = self.current_piece
 
-    def start_game(self):
+    def check_status(self, x: int, y: int) -> typing.Union[int, None]:
+        """
+        Check if game is over.It may alter
+        :param x:
+        :param y:
+        :param piece:
+        :return: 1 if CROSS wins, -1 if CIRCLE wins; 0 if game tied; None if game continues
+        """
+        if self.check_tied():
+            return 0
+
+        # If game is not tied, check if any player wins the game
+        winner = self.game_board.check_status(x, y, self.current_piece)
+        if winner != 0:
+            return winner
+        else:
+            return None
+
+    def start_game(self, first_player: players.Player, second_player: players.Player):
+        from itertools import cycle
         print("Game started!")
         self.game_running = True
-        while self.game_running:
-            pass
+        players_queue = cycle([first_player, second_player])
+        status_after_play = 0
+        for player in players_queue:
+            if not self.game_running:
+                break
+
+            # A player first look at the board
+            player.peek(self.game_board, self.current_piece)
+            position = first_player.play()
+            row, col = utils.index2coordinate(position, self.game_board.size)
+            self.put_piece(row, col)
+            self.num_steps_played += 1
+
+            # Check status after move
+            status_after_play = self.check_status(row, col)
+            if status_after_play is not None:
+                self.game_running = False
+
+            self.switch_player()
+
+        if status_after_play == CROSS:
+            print("Player CROSS wins!")
+        elif status_after_play == CIRCLE:
+            print("Player CIRCLE wins!")
+        else:
+            print("It's a tied game")
 
 
+# Unit test
+if __name__ == "__main__":
+    player_1 = players.HumanPlayer()
+    player_2 = players.HumanPlayer()
+
+    game = TicTacToeGame(TicTacToeBoard.create_empty_board())
+
+    game.start_game(player_1, player_2)
 
 

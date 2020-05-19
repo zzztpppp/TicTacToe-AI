@@ -39,3 +39,8 @@ class TestUtil:
         assert utils.index2coordinate(8, 3) == (2, 2)
         assert utils.index2coordinate(0, 3) == (0, 0)
         assert utils.index2coordinate(3, 3) == (1, 0)
+
+
+# class Test:
+#     import tic_tac_toe
+#     def test_check_tie(self):

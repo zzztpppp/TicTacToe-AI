@@ -8,7 +8,6 @@ from typing import Union
 from abc import ABC, abstractmethod
 
 
-
 class Player(ABC):
     """
     The abstract base class for all
