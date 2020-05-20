@@ -67,7 +67,7 @@ class TicTacToeBoard:
             return piece
 
         # Diagonally continuous pieces
-        if x == y:
+        if x == y or (x == self.size - y - 1):
             upper_diagonal_values = np.sum([self.board_values[self.board_length - 1 - i, i] for i in range(self.board_width)])
             lower_diagonal_values = np.sum([self.board_values[i, i] for i in range(self.board_width)])
             if upper_diagonal_values == winnable or lower_diagonal_values == winnable:
@@ -175,12 +175,16 @@ class TicTacToeGame:
 
             self.switch_player()
 
+        print(self.game_board)
+
         if status_after_play == CROSS:
             print("Player CROSS wins!")
         elif status_after_play == CIRCLE:
             print("Player CIRCLE wins!")
         else:
             print("It's a tied game")
+
+        return status_after_play
 
 
 # Unit test

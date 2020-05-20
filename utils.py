@@ -3,7 +3,7 @@ Utility funtions
 """
 import numpy as np
 from typing import Tuple
-
+from tic_tac_toe import CROSS, CIRCLE
 
 def get_string_grid(col: int, row: int, vals: np.ndarray) -> str:
     """
@@ -34,7 +34,8 @@ def get_string_grid(col: int, row: int, vals: np.ndarray) -> str:
     sep = '\n' + '+---' * col + '+\n'
     content = [sep]
     for r in range(row):
-        row_content = ['| {v} '.format(v=vals[r, c]) for c in range(col)]
+        row_content = ['| {v} '.format(v='X' if vals[r, c] == CROSS else ('O' if vals[r, c] == CIRCLE else ' '))
+                       for c in range(col)]
         row_content.extend(['|', sep])
         content.append(''.join(row_content))
     return ''.join(content)
