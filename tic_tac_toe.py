@@ -166,7 +166,14 @@ class TicTacToeGame:
         print(self.game_board)
 
     @utils.try_until_success
-    def play(self, player):
+    def play(self, player: players.Player) -> int:
+        """
+        Method that allows the player to look at the game  board
+        and decide where to put his chess.
+
+        :param player:
+        :return:
+        """
         # A player first look at the board
         player.peek(self.game_board, self.current_piece)
         position = player.play()
@@ -178,7 +185,7 @@ class TicTacToeGame:
 
         return status_after_play
 
-    def start_game(self, first_player: players.Player, second_player: players.Player):
+    def start_game(self, first_player: players.Player, second_player: players.Player) -> int:
         from itertools import cycle
         self.game_running = True
         players_queue = cycle([first_player, second_player])
