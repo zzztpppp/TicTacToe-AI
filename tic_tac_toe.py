@@ -84,6 +84,13 @@ class TicTacToeBoard:
         data = self.board_values.copy()
         return type(self)(data)
 
+    def clean(self):
+        """
+        Set the values of the board to be zero
+        :return:
+        """
+        self.board_values = np.zeros((self.size, self.size))
+
     @classmethod
     def create_empty_board(cls, size=3):
         board_value = np.array([[0]*3 for _ in range(size)])
@@ -151,38 +158,47 @@ class TicTacToeGame:
         else:
             return None
 
+    def show_board(self):
+        """
+        Print the game board onto console
+        :return:
+        """
+        print(self.game_board)
+
+    @utils.try_until_success
+    def play(self, player):
+        # A player first look at the board
+        player.peek(self.game_board, self.current_piece)
+        position = player.play()
+        row, col = utils.index2coordinate(position, self.game_board.size)
+        self.put_piece(row, col)
+
+        # Check status after move
+        status_after_play = self.check_status(row, col)
+
+        return status_after_play
+
     def start_game(self, first_player: players.Player, second_player: players.Player):
         from itertools import cycle
-        print("Game started!")
         self.game_running = True
         players_queue = cycle([first_player, second_player])
         status_after_play = 0
+
+        # Player moves one by one
         for player in players_queue:
             if not self.game_running:
                 break
 
-            # A player first look at the board
-            player.peek(self.game_board, self.current_piece)
-            position = first_player.play()
-            row, col = utils.index2coordinate(position, self.game_board.size)
-            self.put_piece(row, col)
+            status_after_play = self.play(player)
+
             self.num_steps_played += 1
 
-            # Check status after move
-            status_after_play = self.check_status(row, col)
             if status_after_play is not None:
                 self.game_running = False
 
             self.switch_player()
 
-        print(self.game_board)
-
-        if status_after_play == CROSS:
-            print("Player CROSS wins!")
-        elif status_after_play == CIRCLE:
-            print("Player CIRCLE wins!")
-        else:
-            print("It's a tied game")
+        self.show_board()
 
         return status_after_play
 
@@ -193,7 +209,14 @@ if __name__ == "__main__":
     player_2 = players.HumanPlayer()
 
     game = TicTacToeGame(TicTacToeBoard.create_empty_board())
+    print("Game started")
 
-    game.start_game(player_1, player_2)
+    game_result = game.start_game(player_1, player_2)
+    if game_result == CROSS:
+        print("Player CROSS wins!")
+    elif game_result == CIRCLE:
+        print("Player CIRCLE wins!")
+    else:
+        print("It's a tied game")
 
 

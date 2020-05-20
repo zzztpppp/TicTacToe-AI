@@ -3,7 +3,8 @@ Utility funtions
 """
 import numpy as np
 from typing import Tuple
-from tic_tac_toe import CROSS, CIRCLE
+from functools import wraps
+
 
 def get_string_grid(col: int, row: int, vals: np.ndarray) -> str:
     """
@@ -29,6 +30,8 @@ def get_string_grid(col: int, row: int, vals: np.ndarray) -> str:
     +---+---+---+
 
     """
+    from tic_tac_toe import CROSS, CIRCLE
+
     if vals.shape != (row, col):
         raise ValueError("Shape of values should row by col")
     sep = '\n' + '+---' * col + '+\n'
@@ -67,3 +70,25 @@ def index2coordinate(index: int, size: int) -> Tuple[int, int]:
 
 def alternate(first, second):
     return first, lambda: alternate(second, first)
+
+
+# Decorators
+def try_until_success(func):
+    """
+    A decorator that allows us to try execute the given function
+    until no exceptions are raised
+
+    :param func:
+    :return:
+    """
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except ValueError:
+            print('Invalid arguments, please try again')
+            return wrapper(*args, **kwargs)
+
+    return wrapper
+
