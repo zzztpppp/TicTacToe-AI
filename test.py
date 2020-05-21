@@ -11,11 +11,14 @@ class TestGameBoard:
     data2 = np.array([[1, 1, 1], [0, 1, 0], [-1, -1, -1]])
     board2 = tic_tac_toe.TicTacToeBoard(data2)
 
+    data3 = np.array([[1, -1, 1], [1, -1, 1], [-1, 1, -1]])
+    board3 = tic_tac_toe.TicTacToeBoard(data3)
+
     def test_put(self):
-        self.board.put_circle(0, 1)
+        self.board.put_piece(0, 1, 1)
         assert self.board.board_values[0, 1] == 1
 
-        self.board.put_cross(1, 1)
+        self.board.put_piece(1, 1, -1)
         assert self.board.board_values[1, 1] == -1
 
     def test_copy(self):
@@ -30,7 +33,12 @@ class TestGameBoard:
     def test_check_status(self):
         assert self.board2.check_status(0, 2, 1) == 1
         assert self.board2.check_status(2, 2, -1) == -1
-        assert self.board2.check_status(1, 1, 1) == 0
+        assert self.board2.check_status(1, 1, 1) is None
+
+        # Test tied game
+        assert self.board3.check_status(0, 0, 1) == 0
+        assert self.board3.check_status(0, 2, 1) == 0
+        assert self.board3.check_status(2, 0, -1) == 0
 
 
 class TestUtil:
