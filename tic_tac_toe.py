@@ -46,7 +46,7 @@ class TicTacToeBoard:
         :return:
         """
         self.board_values[x, y] = piece
-        self.tiles_taken = True
+        self.tiles_taken[x, y] = True
 
     def check_status(self, x: int, y: int, piece: int) -> typing.Union[int, None]:
         """
@@ -201,11 +201,11 @@ if __name__ == "__main__":
     player_1 = players.HumanPlayer()
     player_2 = players.HumanPlayer()
 
-    data3 = np.array([[1, -1, 1], [1, -1, 1], [-1, 1, 0]])
-    test_board = TicTacToeBoard(data3)
-    game = TicTacToeGame(test_board)
+    # data3 = np.array([[1, -1, 1], [1, -1, 1], [-1, 1, 0]])
+    # test_board = TicTacToeBoard(data3)
+    # game = TicTacToeGame(test_board)
 
-    # game = TicTacToeGame(TicTacToeBoard.create_empty_board())
+    game = TicTacToeGame(TicTacToeBoard.create_empty_board())
     print("Game started")
 
     game_result = game.start_game(player_1, player_2)
