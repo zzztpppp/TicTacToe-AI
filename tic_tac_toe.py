@@ -28,33 +28,31 @@ class TicTacToeBoard:
         # Our board always has length == width
         self.board_width, self.board_length = board.shape
 
+        # An array to keep track whether each position of
+        # the board is taken
+        self.tiles_taken = board != 0
+
     @property
     def size(self):
         return self.board_width
 
-    def put_circle(self, x: int, y: int):
+    def put_piece(self, x: int, y: int, piece: int):
         """
-        Put the 1 chess piece at the given position of the board
-        :param x: Horizontal index
-        :param y: Vertical index
+        Put the given piece at the given position
+
+        :param x:
+        :param y:
+        :param piece:
         :return:
         """
-        self.board_values[x, y] = CIRCLE
+        self.board_values[x, y] = piece
+        self.tiles_taken = True
 
-    def put_cross(self, x: int, y: int):
-        """
-        Put chess piece -1 at the given position of the board
-        :param x: Horizontal index
-        :param y: Vertical index
-        :return:
-        """
-        self.board_values[x, y] = CROSS
-
-    def check_status(self, x: int, y: int, piece: int) -> int:
+    def check_status(self, x: int, y: int, piece: int) -> typing.Union[int, None]:
         """
         Check whether game is over after put a $piece at the
         position
-        :return: -1 if game continues, 1 game ends and piece 1 winds, 0 game ends and piece 0 wins
+        :return: -1 if CROSS wins, 1 CIRCLE wins, 0 its a tie, None if game continues
         """
         winnable = piece * self.continuous_pieces_to_win
 
@@ -73,8 +71,12 @@ class TicTacToeBoard:
             if upper_diagonal_values == winnable or lower_diagonal_values == winnable:
                 return piece
 
+        # Game board is full and no player wins
+        if np.all(self.tiles_taken):
+            return 0
+
         # Game is not over
-        return 0
+        return None
 
     def copy(self):
         """
@@ -90,6 +92,7 @@ class TicTacToeBoard:
         :return:
         """
         self.board_values = np.zeros((self.size, self.size))
+        self.tiles_taken[:, :] = False
 
     @classmethod
     def create_empty_board(cls, size=3):
@@ -110,8 +113,6 @@ class TicTacToeGame:
         self.game_board = game_board
         self.current_piece = first_player  # The piece to put for this move
 
-        self.num_steps_played = 0
-
         self.game_running = False
 
     def switch_player(self):
@@ -119,13 +120,6 @@ class TicTacToeGame:
             self.current_piece = CIRCLE
         else:
             self.current_piece = CROSS
-
-    def check_tied(self):
-        board_size = self.game_board.size
-        if board_size ** 2 == self.num_steps_played:
-            return True
-
-        return False
 
     def put_piece(self, x: int, y: int):
         """
@@ -138,7 +132,7 @@ class TicTacToeGame:
         if self.game_board.board_values[x, y] != 0:
             raise ValueError("You must select a empty slot!")
 
-        self.game_board.board_values[x, y] = self.current_piece
+        self.game_board.put_piece(x, y, self.current_piece)
 
     def check_status(self, x: int, y: int) -> typing.Union[int, None]:
         """
@@ -148,15 +142,9 @@ class TicTacToeGame:
         :param piece:
         :return: 1 if CROSS wins, -1 if CIRCLE wins; 0 if game tied; None if game continues
         """
-        if self.check_tied():
-            return 0
 
-        # If game is not tied, check if any player wins the game
-        winner = self.game_board.check_status(x, y, self.current_piece)
-        if winner != 0:
-            return winner
-        else:
-            return None
+        status_after_move = self.game_board.check_status(x, y, self.current_piece)
+        return status_after_move
 
     def show_board(self):
         """
@@ -198,8 +186,6 @@ class TicTacToeGame:
 
             status_after_play = self.play(player)
 
-            self.num_steps_played += 1
-
             if status_after_play is not None:
                 self.game_running = False
 
@@ -215,7 +201,11 @@ if __name__ == "__main__":
     player_1 = players.HumanPlayer()
     player_2 = players.HumanPlayer()
 
-    game = TicTacToeGame(TicTacToeBoard.create_empty_board())
+    data3 = np.array([[1, -1, 1], [1, -1, 1], [-1, 1, 0]])
+    test_board = TicTacToeBoard(data3)
+    game = TicTacToeGame(test_board)
+
+    # game = TicTacToeGame(TicTacToeBoard.create_empty_board())
     print("Game started")
 
     game_result = game.start_game(player_1, player_2)
