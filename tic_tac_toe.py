@@ -13,7 +13,7 @@ CROSS = -1
 
 class TicTacToeBoard:
     """
-    The board the holds the tic-tac-toe game
+    The board that holds the tic-tac-toe game
     """
     continuous_pieces_to_win = 3
 
@@ -173,7 +173,22 @@ class TicTacToeGame:
 
         return status_after_play
 
+    def copy(self):
+        """
+        Return a new instance of the same game object
+
+        :return:
+        """
+        return type(self)(self.game_board.copy(), self.current_piece)
+
     def start_game(self, first_player: players.Player, second_player: players.Player) -> int:
+        """
+        Start the game with two given players
+
+        :param first_player:
+        :param second_player:
+        :return:
+        """
         from itertools import cycle
         self.game_running = True
         players_queue = cycle([first_player, second_player])
@@ -199,7 +214,7 @@ class TicTacToeGame:
 # Unit test
 if __name__ == "__main__":
     player_1 = players.HumanPlayer()
-    player_2 = players.HumanPlayer()
+    player_2 = players.RandomPlayer()
 
     # data3 = np.array([[1, -1, 1], [1, -1, 1], [-1, 1, 0]])
     # test_board = TicTacToeBoard(data3)
@@ -208,7 +223,7 @@ if __name__ == "__main__":
     game = TicTacToeGame(TicTacToeBoard.create_empty_board())
     print("Game started")
 
-    game_result = game.start_game(player_1, player_2)
+    game_result = game.start_game(player_2, player_1)
     if game_result == CROSS:
         print("Player CROSS wins!")
     elif game_result == CIRCLE:
