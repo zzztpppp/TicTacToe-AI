@@ -16,6 +16,7 @@ class Player(ABC):
 
     def __init__(self):
         self._name = None  # Name of this player
+        self._game = None
 
     @property
     def name(self) -> Union[None, str]:
@@ -24,6 +25,14 @@ class Player(ABC):
         :return: Name of this player, None if player is not named
         """
         return self._name
+
+    @property
+    def game(self):
+        return self._game
+
+    @game.setter
+    def game(self, game):
+        self._game = game
 
     @name.setter
     def name(self, name: str):
@@ -36,13 +45,12 @@ class Player(ABC):
         self._name = name
 
     @abstractmethod
-    def peek(self, board, piece_type: int):
+    def peek(self, game):
         """
         Peek the game board, pre-process necessary information
         for play.
 
-        :param piece_type: Which piece does the player need to put
-        :param board: The game board
+        :param game: The game board
         :return:
         """
         pass
@@ -73,18 +81,16 @@ class HumanPlayer(Player):
 
     def __init__(self):
         super().__init__()
-        pass
 
-    def peek(self, board, piece_type: int):
+    def peek(self, game):
         """
         For human players to peek the game board, just simply print the
         board onto console
 
-        :param board:
-        :param piece_type:
+        :param game:
         :return:
         """
-        print(board)
+        print(game.game_board)
 
     def play(self) -> int:
         """
