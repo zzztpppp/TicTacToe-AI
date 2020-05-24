@@ -19,7 +19,7 @@ class TicTacToeBoard:
 
     def __init__(self, board: np.ndarray):
         """
-        Initailize  a board
+        Initialize  a board
         :param board: A 3 by numpy ndarray, with elements 0 and 1
         """
 
@@ -94,6 +94,14 @@ class TicTacToeBoard:
         self.board_values = np.zeros((self.size, self.size))
         self.tiles_taken[:, :] = False
 
+    def get_empty_slots(self):
+        """
+        Get the list of empty slots
+        """
+        slots = np.reshape(range(0, self.size * self.size), (self.size, self.size))
+
+        return slots[~self.tiles_taken]
+
     @classmethod
     def create_empty_board(cls, size=3):
         board_value = np.array([[0]*3 for _ in range(size)])
@@ -163,7 +171,7 @@ class TicTacToeGame:
         :return:
         """
         # A player first look at the board
-        player.peek(self.game_board, self.current_piece)
+        player.peek(self)
         position = player.play()
         row, col = utils.index2coordinate(position, self.game_board.size)
         self.put_piece(row, col)
@@ -181,6 +189,7 @@ class TicTacToeGame:
         """
         return type(self)(self.game_board.copy(), self.current_piece)
 
+    # TODO: Make players as instance variables and give each of them a setter&getter method
     def start_game(self, first_player: players.Player, second_player: players.Player) -> int:
         """
         Start the game with two given players
@@ -214,7 +223,7 @@ class TicTacToeGame:
 # Unit test
 if __name__ == "__main__":
     player_1 = players.HumanPlayer()
-    player_2 = players.RandomPlayer()
+    player_2 = players.MonteCarloPlayer()
 
     # data3 = np.array([[1, -1, 1], [1, -1, 1], [-1, 1, 0]])
     # test_board = TicTacToeBoard(data3)
