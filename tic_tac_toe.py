@@ -6,6 +6,7 @@ import numpy as np
 import utils
 import typing
 import players
+import exceptions
 
 CIRCLE = 1
 CROSS = -1
@@ -138,7 +139,8 @@ class TicTacToeGame:
         :return:
         """
         if self.game_board.board_values[x, y] != 0:
-            raise ValueError("You must select a empty slot!")
+            print(x, y)
+            raise exceptions.NonEmptySlotError("You must select a empty slot!")
 
         self.game_board.put_piece(x, y, self.current_piece)
 
@@ -173,6 +175,7 @@ class TicTacToeGame:
         # A player first look at the board
         player.peek(self)
         position = player.play()
+        # print(position)
         row, col = utils.index2coordinate(position, self.game_board.size)
         self.put_piece(row, col)
 
@@ -215,8 +218,6 @@ class TicTacToeGame:
 
             self.switch_player()
 
-        self.show_board()
-
         return status_after_play
 
 
@@ -233,6 +234,9 @@ if __name__ == "__main__":
     print("Game started")
 
     game_result = game.start_game(player_2, player_1)
+
+    # Show final status of a board
+    game.show_board()
     if game_result == CROSS:
         print("Player CROSS wins!")
     elif game_result == CIRCLE:

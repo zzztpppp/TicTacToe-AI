@@ -80,17 +80,26 @@ class MonteCarloPlayer(Player):
         winning_probabilities = []
         for move in move_list:
             pseudo_game = self.game.copy()
-            row, col = utils.index2coordinate(move, pseudo_game.game_board.size)
-            pseudo_game.put_piece(row, col)
-            pseudo_game.switch_player()
-            simulation_result = self._simulate(pseudo_game)
+            prior_player = DumbPlayer(move)
+            status = pseudo_game.play(prior_player)
+
+            # If game ends at first move, then no need to simulate
+            if status is not None:
+                simulation_result = [status]
+            else:
+                pseudo_game.switch_player()
+                simulation_result = self._simulate(pseudo_game)
+
             winning_probabilities.append(np.sum([x == current_piece for x in simulation_result]) / self._num_simulations)
 
         winning_probabilities_each_move = zip(move_list, winning_probabilities)
-        return max(winning_probabilities_each_move, key=lambda x: x[1])[0]
+
+        # If no moves go into simulation, return the last move in move_list
+        return max(winning_probabilities_each_move, key=lambda x: x[1])[0] or move_list[-1]
 
     def _simulate(self, game) -> List[int]:
         simulation_result = []
+        # TODO: Consider a shrinking number of simulations with shrinking number of empty slots for better performance
         for _ in range(self._num_simulations):
             game_dup = game.copy()
 
@@ -150,6 +159,20 @@ class RandomPlayer(Player):
         """
         return np.random.choice(self.game.game_board.get_empty_slots())
 
+
+class DumbPlayer(Player):
+    """
+    A player that alawys play one given position
+    """
+    def __init__(self, pos):
+        super().__init__()
+        self.position = pos
+
+    def peek(self, game):
+        return
+
+    def play(self):
+        return self.position
 
 # AI player engines. It would have two kinds of AI engines: Monte carlo based one and
 # the reinforcement learning based one.
