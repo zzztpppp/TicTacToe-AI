@@ -90,7 +90,7 @@ class MonteCarloPlayer(Player):
                 pseudo_game.switch_player()
                 simulation_result = self._simulate(pseudo_game)
 
-            winning_probabilities.append(np.sum([x == current_piece for x in simulation_result]) / self._num_simulations)
+            winning_probabilities.append(np.sum([x == current_piece for x in simulation_result]) / len(simulation_result))
 
         winning_probabilities_each_move = zip(move_list, winning_probabilities)
 
