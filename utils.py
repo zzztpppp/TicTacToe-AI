@@ -4,6 +4,7 @@ Utility funtions
 import numpy as np
 from typing import Tuple
 from functools import wraps
+from exceptions import NonEmptySlotError
 
 
 def get_string_grid(col: int, row: int, vals: np.ndarray) -> str:
@@ -86,7 +87,7 @@ def try_until_success(func):
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except ValueError:
+        except NonEmptySlotError:
             print('Invalid arguments, please try again')
             return wrapper(*args, **kwargs)
 
