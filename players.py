@@ -5,6 +5,9 @@ and the subclass for AI-player, human-player.
 
 import numpy as np
 import utils
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 from typing import Union, List
 
 from abc import ABC, abstractmethod
@@ -173,6 +176,86 @@ class DumbPlayer(Player):
 
     def play(self):
         return self.position
+
+
+class DQN(nn.Module):
+    """A simple deep Q network implementation.
+    Computes Q values for each (action, object) tuple given an input state vector
+    """
+
+    def __init__(self, state_dim, action_dim, hidden_size=100):
+        super(DQN, self).__init__()
+        self.state_encoder = nn.Linear(state_dim, hidden_size)
+        self.state2action = nn.Linear(hidden_size, action_dim)
+
+    def forward(self, x):
+        state = F.relu(self.state_encoder(x))
+        return self.state2action(state)
+
+
+class RfPlayer(Player):
+    """
+    An AI player based on reinforcement learning method
+    """
+
+    def __init__(self, dqn: DQN):
+        super().__init__()
+        self.dqn = dqn
+
+    def peek(self, game):
+        return
+
+    def play(self):
+        game_state = self._get_game_states()
+        q_values = self.dqn(game_state)
+        return q_values.argmax()
+
+    def _get_game_states(self):
+        """
+        Get the current game status according to current game player
+        :return: A numpy array with values True standing for self
+        and False for opponent.
+        """
+        game_values = self.game.get_board_values()
+        current_player = self.game.current_piece
+
+        return game_values * current_player
+
+
+class RfTrainer:
+    """
+    Takes the dqn and train it
+    """
+
+    def __init__(self, dqn: DQN, n_epochs: int, alpha=0.025, gamma=0.5):
+        """
+        Construct a new trainer
+
+        :param dqn: The q-function network tobe trained
+        :param n_epochs: Number of  rounds to train
+        :param alpha: Learning rate
+        :param gamma: Discount factor when calculating reward
+        """
+        self.dqn = dqn
+        self.n_epochs = n_epochs
+        self.alpha = alpha
+        self.gamma = gamma
+
+    # TODO: Maybe initialize a game instance inside the method?
+    def run_episode(self, game):
+        """
+        Run one round of training
+        :return:
+        """
+        # Create two AI players who share the same dqn
+        player_1 = RfPlayer(self.dqn)
+        player_2 = RfPlayer(self.dqn)
+
+
+
+
+
+
 
 
 
