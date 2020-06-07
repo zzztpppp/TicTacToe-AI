@@ -192,7 +192,6 @@ class TicTacToeGame:
         """
         return type(self)(self.game_board.copy(), self.current_piece)
 
-    # TODO: Make players as instance variables and give each of them a setter&getter method
     def start_game(self, first_player: players.Player, second_player: players.Player) -> int:
         """
         Start the game with two given players
@@ -219,6 +218,9 @@ class TicTacToeGame:
             self.switch_player()
 
         return status_after_play
+
+    def get_board_values(self):
+        return self.game_board.board_values.copy()
 
 
 # Unit test
