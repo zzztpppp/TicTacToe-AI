@@ -8,7 +8,10 @@ import utils
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import in_game_types as t
+
 from typing import Union, List
+from itertools import cycle
 
 from abc import ABC, abstractmethod
 
@@ -93,7 +96,9 @@ class MonteCarloPlayer(Player):
                 pseudo_game.switch_player()
                 simulation_result = self._simulate(pseudo_game)
 
-            winning_probabilities.append(np.sum([x == current_piece for x in simulation_result]) / len(simulation_result))
+            winning_probabilities.append(
+                np.sum([x == current_piece for x in simulation_result]) / len(simulation_result)
+            )
 
         winning_probabilities_each_move = zip(move_list, winning_probabilities)
 
@@ -198,17 +203,20 @@ class RfPlayer(Player):
     An AI player based on reinforcement learning method
     """
 
-    def __init__(self, dqn: DQN):
+    def __init__(self, dqn: DQN, epsilon):
         super().__init__()
         self.dqn = dqn
+        self.epsilon = epsilon
+        self.prev_move = None   # Previous move. For model training
 
     def peek(self, game):
         return
 
     def play(self):
-        game_state = self._get_game_states()
-        q_values = self.dqn(game_state)
-        return q_values.argmax()
+        q_values = self.dqn(self._get_game_states())
+        move = self.epsilon_greedy(q_values, self.game.board_values.get_empty_slots())
+        self.prev_move = move
+        return move
 
     def _get_game_states(self):
         """
@@ -221,13 +229,23 @@ class RfPlayer(Player):
 
         return game_values * current_player
 
+    def epsilon_greedy(self, q_values, exploring_position):
+        """
+        With probability epsilon exploring  and (1-epsilon) exploiting
+
+        :param exploring_position: Positions that can be randomly explored
+        :param q_values: Q values for each position
+        """
+        is_exploring = np.random.random <= self.epsilon
+        return np.random.choice(exploring_position) if is_exploring else q_values.argamax()
+
 
 class RfTrainer:
     """
     Takes the dqn and train it
     """
 
-    def __init__(self, dqn: DQN, n_epochs: int, alpha=0.025, gamma=0.5):
+    def __init__(self, dqn: DQN, n_epochs: int, alpha=0.025, gamma=0.5, exploring_rate=0.5):
         """
         Construct a new trainer
 
@@ -240,6 +258,7 @@ class RfTrainer:
         self.n_epochs = n_epochs
         self.alpha = alpha
         self.gamma = gamma
+        self.exploring_rate = exploring_rate
 
     # TODO: Maybe initialize a game instance inside the method?
     def run_episode(self, game):
@@ -248,14 +267,44 @@ class RfTrainer:
         :return:
         """
         # Create two AI players who share the same dqn
-        player_1 = RfPlayer(self.dqn)
-        player_2 = RfPlayer(self.dqn)
+        player_1 = RfPlayer(self.dqn, self.exploring_rate)
+        player_2 = RfPlayer(self.dqn, self.exploring_rate)
+        player_1.game, player_2.game = game, game
 
+        players_queue = cycle([player_1, player_2])
+        for player in players_queue:
+            if not game.game_running:
+                break
+            status_after_play = game.play(player)
+            reward = self._get_reward(status_after_play, game)
+            move = player.prev_move
 
+            # Update q-function
+            self._q_learning(reward, move)
 
+            game.switch_player()
 
+        # Return the dqn trained.
+        return self.dqn
 
+    def _q_learning(self, reward, move):
+        """
+        Update q_function according to the reward gained and the move invoked.
+        """
+        pass
 
+    @staticmethod
+    def _get_reward(status_after_play, game):
 
+        if status_after_play is None:
+            return 0
 
-
+        # The player wins the game
+        if status_after_play == game.current_piece:
+            return t.WINNING_REWARD
+        # The game is a tie
+        elif status_after_play == 0:
+            return t.DRAWING_REWARD
+        # Losing the game
+        else:
+            return t.LOSING_REWARD
