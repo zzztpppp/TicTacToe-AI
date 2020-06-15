@@ -9,6 +9,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import in_game_types as t
+import torch.optim as optim
 
 from typing import Union, List
 from itertools import cycle
@@ -245,7 +246,13 @@ class RfTrainer:
     Takes the dqn and train it
     """
 
-    def __init__(self, dqn: DQN, n_epochs: int, alpha=0.025, gamma=0.5, exploring_rate=0.5):
+    def __init__(
+            self, dqn: DQN,
+            n_epochs: int,
+            alpha=0.025,
+            gamma=0.5,
+            exploring_rate=0.5,
+    ):
         """
         Construct a new trainer
 
@@ -259,6 +266,7 @@ class RfTrainer:
         self.alpha = alpha
         self.gamma = gamma
         self.exploring_rate = exploring_rate
+        self.optimizer = optim.SGD(self.dqn.parameters(), lr=self.alpha)
 
     # TODO: Maybe initialize a game instance inside the method?
     def run_episode(self, game):
@@ -280,18 +288,31 @@ class RfTrainer:
             move = player.prev_move
 
             # Update q-function
-            self._q_learning(reward, move)
+            self._q_learning(reward, move, game.game_running)
 
             game.switch_player()
 
         # Return the dqn trained.
         return self.dqn
 
-    def _q_learning(self, reward, move):
+    def _q_learning(self, reward, current_state, move, next_state, game_running):
         """
         Update q_function according to the reward gained and the move invoked.
         """
-        pass
+        with torch.no_grad():
+            q_next = self.dqn(next_state)
+
+        qmax_next = q_next.max()
+
+        q_current_old = self.dqn(current_state)[move]
+
+        q_current_new = torch.tensor(float(reward)) + (self.gamma * qmax_next if game_running else 0)
+
+        loss = F.mse_loss(q_current_old, q_current_new)
+
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
 
     @staticmethod
     def _get_reward(status_after_play, game):
