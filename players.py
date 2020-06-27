@@ -3,6 +3,8 @@ File contains Player's abstract class
 and the subclass for AI-player, human-player.
 """
 
+import os
+
 import numpy as np
 import utils
 import torch
@@ -15,6 +17,11 @@ from typing import Union, List
 from itertools import cycle
 
 from abc import ABC, abstractmethod
+
+from config  import game_config
+
+# Where we store the pre_trained dqn
+DQN_DIRECTORY = os.path.join('.', 'dqn.pkl')
 
 
 class Player(ABC):
@@ -214,31 +221,32 @@ class RfPlayer(Player):
         return
 
     def play(self):
-        q_values = self.dqn(self._get_game_states())
+        game_state = torch.tensor(self.get_game_states(), dtype=torch.float)
+        q_values = self.dqn(game_state)
         move = self.epsilon_greedy(q_values, self.game.board_values.get_empty_slots())
         self.prev_move = move
         return move
 
-    def _get_game_states(self):
+    def get_game_states(self):
         """
         Get the current game status according to current game player
         :return: A numpy array with values True standing for self
-        and False for opponent.
+        and False for opponent.i.e. its a relative state
         """
         game_values = self.game.get_board_values()
         current_player = self.game.current_piece
 
         return game_values * current_player
 
-    def epsilon_greedy(self, q_values, exploring_position):
+    def epsilon_greedy(self, q_values, possible_exploring_positions):
         """
         With probability epsilon exploring  and (1-epsilon) exploiting
 
-        :param exploring_position: Positions that can be randomly explored
+        :param possible_exploring_positions: Positions that can be randomly explored
         :param q_values: Q values for each position
         """
         is_exploring = np.random.random <= self.epsilon
-        return np.random.choice(exploring_position) if is_exploring else q_values.argamax()
+        return np.random.choice(possible_exploring_positions) if is_exploring else q_values.argamax()
 
 
 class RfTrainer:
@@ -248,7 +256,7 @@ class RfTrainer:
 
     def __init__(
             self, dqn: DQN,
-            n_epochs: int,
+            n_episodes: int,
             alpha=0.025,
             gamma=0.5,
             exploring_rate=0.5,
@@ -257,16 +265,29 @@ class RfTrainer:
         Construct a new trainer
 
         :param dqn: The q-function network tobe trained
-        :param n_epochs: Number of  rounds to train
+        :param n_episodes: Number of  rounds to train
         :param alpha: Learning rate
         :param gamma: Discount factor when calculating reward
         """
         self.dqn = dqn
-        self.n_epochs = n_epochs
+        self.n_episodes = n_episodes
         self.alpha = alpha
         self.gamma = gamma
         self.exploring_rate = exploring_rate
         self.optimizer = optim.SGD(self.dqn.parameters(), lr=self.alpha)
+
+    def train(self):
+        episodes_trained = 0
+        from tic_tac_toe import TicTacToeGame,TicTacToeBoard
+
+        while episodes_trained < self.n_episodes:
+
+            new_game = TicTacToeGame(TicTacToeBoard.create_empty_board(game_config.BOARD_SIZE))
+            self.run_episode(new_game)
+
+            episodes_trained += 1
+
+        return self.dqn
 
     # TODO: Maybe initialize a game instance inside the method?
     def run_episode(self, game):
@@ -278,17 +299,22 @@ class RfTrainer:
         player_1 = RfPlayer(self.dqn, self.exploring_rate)
         player_2 = RfPlayer(self.dqn, self.exploring_rate)
         player_1.game, player_2.game = game, game
+        game.game_running = True
 
         players_queue = cycle([player_1, player_2])
         for player in players_queue:
             if not game.game_running:
                 break
+            current_state = player.get_game_states()
             status_after_play = game.play(player)
+
+            # Take the not operation since next state is pivoted on the opponent
+            next_state = ~player.get_game_states()
             reward = self._get_reward(status_after_play, game)
             move = player.prev_move
 
             # Update q-function
-            self._q_learning(reward, move, game.game_running)
+            self._q_learning(reward, current_state, move, next_state, game.game_running)
 
             game.switch_player()
 
@@ -306,7 +332,8 @@ class RfTrainer:
 
         q_current_old = self.dqn(current_state)[move]
 
-        q_current_new = torch.tensor(float(reward)) + (self.gamma * qmax_next if game_running else 0)
+        # Since next state denotes the q value of the opponent, then less the better.
+        q_current_new = torch.tensor(float(reward)) - (self.gamma * qmax_next if game_running else 0)
 
         loss = F.mse_loss(q_current_old, q_current_new)
 
@@ -329,3 +356,17 @@ class RfTrainer:
         # Losing the game
         else:
             return t.LOSING_REWARD
+
+
+if __name__ == '__main__':
+
+    pre_trained_dqn = DQN(game_config.BOARD_SIZE**2, game_config.BOARD_SIZE**2)
+
+    dqn_trainer = RfTrainer(pre_trained_dqn, n_episodes=100)
+
+    pre_trained_dqn = dqn_trainer.train()
+
+    # Dump the pre-trained dqn as pickle file.
+    import pickle
+    with open(DQN_DIRECTORY, 'wb') as f:
+        pickle.dump(pre_trained_dqn, f, pickle.HIGHEST_PROTOCOL)
