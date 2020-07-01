@@ -312,7 +312,7 @@ class RfTrainer:
                 game.game_running = False
 
             # Take the not operation since next state is pivoted on the opponent
-            next_state = torch.tensor(~player.get_game_states(), dtype=torch.float)
+            next_state = torch.tensor(-player.get_game_states(), dtype=torch.float)
             reward = self._get_reward(status_after_play, game)
             move = player.prev_move
 
@@ -348,7 +348,7 @@ class RfTrainer:
     def _get_reward(status_after_play, game):
 
         if status_after_play is None:
-            return 0
+            return t.PLAIN_REWARD
 
         # The player wins the game
         if status_after_play == game.current_piece:
