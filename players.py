@@ -13,12 +13,15 @@ import torch.nn.functional as F
 import in_game_types as t
 import torch.optim as optim
 
+import exceptions
+
 from typing import Union, List
 from itertools import cycle
 
 from abc import ABC, abstractmethod
 
 from config  import game_config
+
 
 # Where we store the pre_trained dqn
 DQN_DIRECTORY = os.path.join('.', 'dqn.pkl')
@@ -306,14 +309,31 @@ class RfTrainer:
         for player in players_queue:
             if not game.game_running:
                 break
+
             current_state = torch.tensor(player.get_game_states(), dtype=torch.float)
-            status_after_play = game.play(player)
-            if status_after_play is not None:
+            # Basically we goes through the same procedure
+            # as in the game.play(). But since we need the internal state
+            # in game.play() and don't want the exception being ignored,
+            # we go to the ugly way and replicate the code.
+            # This is a bad example of programming.
+            player.peek(game)
+            position = player.play()
+            row, col = utils.index2coordinate(position, game.game_board.size)
+            try:
+                game.put_piece(row, col)
+                status_after_play = game.check_status(row, col)
+            except exceptions.NonEmptySlotError as e:
+                print(e)
+                # Special code for invalid move
+                status_after_play = -10
+
+            reward = self._get_reward(status_after_play, game)
+
+            if status_after_play is not None and (status_after_play != -10):
                 game.game_running = False
 
             # Take the not operation since next state is pivoted on the opponent
             next_state = torch.tensor(-player.get_game_states(), dtype=torch.float)
-            reward = self._get_reward(status_after_play, game)
             move = player.prev_move
 
             # Update q-function
@@ -356,6 +376,10 @@ class RfTrainer:
         # The game is a tie
         elif status_after_play == 0:
             return t.DRAWING_REWARD
+
+        # Special code for invalid move
+        elif status_after_play == -10:
+            return t.INVALID_MOVE_REWARD
         # Losing the game
         else:
             return t.LOSING_REWARD
@@ -365,7 +389,7 @@ if __name__ == '__main__':
 
     pre_trained_dqn = DQN(game_config.BOARD_SIZE**2, game_config.BOARD_SIZE**2)
 
-    dqn_trainer = RfTrainer(pre_trained_dqn, n_episodes=100)
+    dqn_trainer = RfTrainer(pre_trained_dqn, n_episodes=1000)
 
     pre_trained_dqn = dqn_trainer.train()
 
