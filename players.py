@@ -202,7 +202,8 @@ class DQN(nn.Module):
         self.state2action = nn.Linear(hidden_size, action_dim)
 
     def forward(self, x):
-        state = F.relu(self.state_encoder(x))
+        flat_x = torch.flatten(x)
+        state = F.relu(self.state_encoder(flat_x))
         return self.state2action(state)
 
 
@@ -223,7 +224,7 @@ class RfPlayer(Player):
     def play(self):
         game_state = torch.tensor(self.get_game_states(), dtype=torch.float)
         q_values = self.dqn(game_state)
-        move = self.epsilon_greedy(q_values, self.game.board_values.get_empty_slots())
+        move = self.epsilon_greedy(q_values, self.game.game_board.get_empty_slots())
         self.prev_move = move
         return move
 
@@ -245,8 +246,8 @@ class RfPlayer(Player):
         :param possible_exploring_positions: Positions that can be randomly explored
         :param q_values: Q values for each position
         """
-        is_exploring = np.random.random <= self.epsilon
-        return np.random.choice(possible_exploring_positions) if is_exploring else q_values.argamax()
+        is_exploring = np.random.random() <= self.epsilon
+        return np.random.choice(possible_exploring_positions) if is_exploring else q_values.argmax()
 
 
 class RfTrainer:
@@ -305,11 +306,13 @@ class RfTrainer:
         for player in players_queue:
             if not game.game_running:
                 break
-            current_state = player.get_game_states()
+            current_state = torch.tensor(player.get_game_states(), dtype=torch.float)
             status_after_play = game.play(player)
+            if status_after_play is not None:
+                game.game_running = False
 
             # Take the not operation since next state is pivoted on the opponent
-            next_state = ~player.get_game_states()
+            next_state = torch.tensor(~player.get_game_states(), dtype=torch.float)
             reward = self._get_reward(status_after_play, game)
             move = player.prev_move
 
