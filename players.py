@@ -14,6 +14,7 @@ import in_game_types as t
 import torch.optim as optim
 
 import exceptions
+import logging
 
 from typing import Union, List
 from itertools import cycle
@@ -261,7 +262,7 @@ class RfTrainer:
     def __init__(
             self, dqn: DQN,
             n_episodes: int,
-            alpha=0.025,
+            alpha=0.1,
             gamma=0.5,
             exploring_rate=0.5,
     ):
@@ -323,13 +324,13 @@ class RfTrainer:
                 game.put_piece(row, col)
                 status_after_play = game.check_status(row, col)
             except exceptions.NonEmptySlotError as e:
-                print(e)
+                logging.warning(e)
                 # Special code for invalid move
                 status_after_play = -10
 
             reward = self._get_reward(status_after_play, game)
 
-            if status_after_play is not None and (status_after_play != -10):
+            if (status_after_play is not None) and (status_after_play != -10):
                 game.game_running = False
 
             # Take the not operation since next state is pivoted on the opponent
@@ -339,7 +340,9 @@ class RfTrainer:
             # Update q-function
             self._q_learning(reward, current_state, move, next_state, game.game_running)
 
-            game.switch_player()
+            # If current player chooses a invalid position. Then let him keep trying.
+            if status_after_play != -10:
+                game.switch_player()
 
         # Return the dqn trained.
         return self.dqn
@@ -356,9 +359,11 @@ class RfTrainer:
         q_current_old = self.dqn(current_state)[move]
 
         # Since next state denotes the q value of the opponent, then less the better.
+        # TODO: utilize a policy function to determine the potential consequence of current move
         q_current_new = torch.tensor(float(reward)) - (self.gamma * qmax_next if game_running else 0)
 
         loss = F.mse_loss(q_current_old, q_current_new)
+        print(f"Current loss is: {loss.item()}")
 
         self.optimizer.zero_grad()
         loss.backward()
@@ -389,7 +394,7 @@ if __name__ == '__main__':
 
     pre_trained_dqn = DQN(game_config.BOARD_SIZE**2, game_config.BOARD_SIZE**2)
 
-    dqn_trainer = RfTrainer(pre_trained_dqn, n_episodes=1000)
+    dqn_trainer = RfTrainer(pre_trained_dqn, n_episodes=100)
 
     pre_trained_dqn = dqn_trainer.train()
 

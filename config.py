@@ -2,6 +2,8 @@
 Game configuration
 """
 
+import logging
+
 
 class GameConfig:
 
@@ -11,3 +13,6 @@ class GameConfig:
 
 
 game_config = GameConfig()
+
+logger = logging.getLogger('game_logger')
+
