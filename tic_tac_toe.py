@@ -7,6 +7,7 @@ import utils
 import typing
 import players
 import exceptions
+from players import DQN  # For unpickle dqn
 
 CIRCLE = 1
 CROSS = -1
@@ -227,6 +228,7 @@ class TicTacToeGame:
 if __name__ == "__main__":
     player_1 = players.HumanPlayer()
     player_2 = players.MonteCarloPlayer()
+    player_3 = players.RfPlayer(players.get_dqn(), epsilon=0.01)
 
     # data3 = np.array([[1, -1, 1], [1, -1, 1], [-1, 1, 0]])
     # test_board = TicTacToeBoard(data3)
@@ -235,7 +237,7 @@ if __name__ == "__main__":
     game = TicTacToeGame(TicTacToeBoard.create_empty_board())
     print("Game started")
 
-    game_result = game.start_game(player_2, player_1)
+    game_result = game.start_game(player_3, player_1)
 
     # Show final status of a board
     game.show_board()

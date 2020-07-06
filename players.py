@@ -21,7 +21,7 @@ from itertools import cycle
 
 from abc import ABC, abstractmethod
 
-from config  import game_config
+from config  import game_config, ai_config
 
 
 # Where we store the pre_trained dqn
@@ -262,7 +262,7 @@ class RfTrainer:
     def __init__(
             self, dqn: DQN,
             n_episodes: int,
-            alpha=0.1,
+            alpha=0.01,
             gamma=0.5,
             exploring_rate=0.5,
     ):
@@ -390,11 +390,23 @@ class RfTrainer:
             return t.LOSING_REWARD
 
 
+def get_dqn(from_archive=ai_config.LOAD_DQN_ARCHIVE):
+    if from_archive:
+        import pickle
+        with open(DQN_DIRECTORY, 'rb') as f:
+            dqn = pickle.load(f)
+    else:
+        dqn = DQN(game_config.BOARD_SIZE**2, game_config.BOARD_SIZE**2)
+        dqn = RfTrainer(dqn, n_episodes=10000)
+
+    return dqn
+
+
 if __name__ == '__main__':
 
     pre_trained_dqn = DQN(game_config.BOARD_SIZE**2, game_config.BOARD_SIZE**2)
 
-    dqn_trainer = RfTrainer(pre_trained_dqn, n_episodes=100)
+    dqn_trainer = RfTrainer(pre_trained_dqn, n_episodes=10000)
 
     pre_trained_dqn = dqn_trainer.train()
 
