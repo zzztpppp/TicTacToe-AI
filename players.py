@@ -85,7 +85,7 @@ class Player(ABC):
 
 
 class MonteCarloPlayer(Player):
-    def __init__(self, num_simulations=1000):
+    def __init__(self, num_simulations=2000):
         super().__init__()
         self._num_simulations = num_simulations
 

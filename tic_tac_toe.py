@@ -237,7 +237,7 @@ if __name__ == "__main__":
     game = TicTacToeGame(TicTacToeBoard.create_empty_board())
     print("Game started")
 
-    game_result = game.start_game(player_1, player_3)
+    game_result = game.start_game(player_1, player_2)
 
     # Show final status of a board
     game.show_board()
