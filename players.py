@@ -223,7 +223,7 @@ class RfPlayer(Player):
         self.prev_move = None   # Previous move. For model training
 
     def peek(self, game):
-        return
+        self.game = game
 
     def play(self):
         game_state = torch.tensor(self.get_game_states(), dtype=torch.float)
@@ -406,7 +406,7 @@ if __name__ == '__main__':
 
     pre_trained_dqn = DQN(game_config.BOARD_SIZE**2, game_config.BOARD_SIZE**2)
 
-    dqn_trainer = RfTrainer(pre_trained_dqn, n_episodes=10000)
+    dqn_trainer = RfTrainer(pre_trained_dqn, n_episodes=50000)
 
     pre_trained_dqn = dqn_trainer.train()
 
