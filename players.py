@@ -108,12 +108,13 @@ class MonteCarloPlayer(Player):
                 pseudo_game.switch_player()
                 simulation_result = self._simulate(pseudo_game)
 
+            simulation_result = [utils.translate_game_status(current_piece, x) for x in simulation_result]
+
             winning_probabilities.append(
-                np.sum([x == current_piece for x in simulation_result]) / len(simulation_result)
+                np.sum(simulation_result) / len(simulation_result)
             )
 
         winning_probabilities_each_move = list(zip(move_list, winning_probabilities))
-        print(winning_probabilities_each_move)
 
         # If no moves go into simulation, return the last move in move_list
         return max(winning_probabilities_each_move, key=lambda x: x[1])[0]
