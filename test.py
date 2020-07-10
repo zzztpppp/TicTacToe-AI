@@ -1,10 +1,11 @@
 import pytest
 import numpy as np
 import utils
+import tic_tac_toe
+import players
 
 
 class TestGameBoard:
-    import tic_tac_toe
     data = np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
     board = tic_tac_toe.TicTacToeBoard(data)
 
@@ -47,6 +48,20 @@ class TestUtil:
         assert utils.index2coordinate(8, 3) == (2, 2)
         assert utils.index2coordinate(0, 3) == (0, 0)
         assert utils.index2coordinate(3, 3) == (1, 0)
+
+
+class TestPlayerIntelegence:
+    board_values_1 = np.array([[0, 0, 0], [-1, 1, 0], [-1, 0, 0]])
+
+    def test_monte_carlo(self):
+        game = tic_tac_toe.TicTacToeGame(tic_tac_toe.TicTacToeBoard(self.board_values_1),
+                                         first_player=tic_tac_toe.CIRCLE)
+
+        monte_carlo_player = players.MonteCarloPlayer()
+        monte_carlo_player.peek(game)
+        assert monte_carlo_player.play() == 0
+
+
 
 
 # class Test:

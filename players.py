@@ -85,7 +85,7 @@ class Player(ABC):
 
 
 class MonteCarloPlayer(Player):
-    def __init__(self, num_simulations=2000):
+    def __init__(self, num_simulations=1000):
         super().__init__()
         self._num_simulations = num_simulations
 
@@ -112,10 +112,11 @@ class MonteCarloPlayer(Player):
                 np.sum([x == current_piece for x in simulation_result]) / len(simulation_result)
             )
 
-        winning_probabilities_each_move = zip(move_list, winning_probabilities)
+        winning_probabilities_each_move = list(zip(move_list, winning_probabilities))
+        print(winning_probabilities_each_move)
 
         # If no moves go into simulation, return the last move in move_list
-        return max(winning_probabilities_each_move, key=lambda x: x[1])[0] or move_list[-1]
+        return max(winning_probabilities_each_move, key=lambda x: x[1])[0]
 
     def _simulate(self, game) -> List[int]:
         simulation_result = []
