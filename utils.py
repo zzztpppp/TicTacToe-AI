@@ -69,6 +69,18 @@ def index2coordinate(index: int, size: int) -> Tuple[int, int]:
     return row, column
 
 
+def translate_game_status(x, y):
+    """
+    Kinda like logic not xor, return 1 if x == y != 0 and -1 if x != y != 0, 0 otherwise
+    """
+    if x == 0 or y == 0:
+        return 1
+
+    if x == y:
+        return 1
+    else:
+        return -1
+
 def alternate(first, second):
     return first, lambda: alternate(second, first)
 
